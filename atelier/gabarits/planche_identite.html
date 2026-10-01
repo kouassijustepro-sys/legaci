@@ -1,0 +1,29 @@
+<!doctype html><meta charset="utf-8">
+<!-- PLANCHE D'IDENTITÉ — logo LEGAC'I et déclinaisons (Livraison design 2). Sert à vérifier la charte avant de monter. -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="../atlas.js"></script>
+<script>
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+function frame() {
+  ctx.drawImage(papier({ grille: false, seed: 7 }), 0, 0);
+  legende(ctx, 'IDENTITÉ · LE TRAIT · ABIDJAN', 70, 200, 30);
+  // 1 · logo sur papier
+  logo(ctx, 70, 480, 120); legende(ctx, "encre sur papier ivoire", 70, 560, 28);
+  // 2 · logo sur noir
+  ctx.fillStyle = C.noir; ctx.fillRect(40, 620, 1000, 330); logo(ctx, 90, 830, 120, { couleur: C.ivoireLogo }); legende(ctx, 'ivoire sur noir', 90, 920, 28, C.ivoireLogo);
+  // 3 · filets de famille
+  legende(ctx, 'FILETS DE FAMILLE  [À VALIDER]', 70, 1040, 30);
+  Object.entries(C.familles).forEach(([n, col], i) => {
+    const y = 1090 + i * 150; papierDechire(ctx, 70, y, 940, 120, { fond: C.noir, seed: 30 + i, amp: 3 });
+    filetFamille(ctx, n, 70, y - 2, 940, 16, 40 + i);
+    ctx.fillStyle = C.ivoireLogo; ctx.font = '900 54px LS'; ctx.fillText(n, 100, y + 82);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(960, y + 66, 18, 0, 7); ctx.fill();
+    legende(ctx, col, 640, y + 76, 30, C.ivoireLogo);
+  });
+  // 4 · la route et le point
+  legende(ctx, 'BRAISE : SEULEMENT LA ROUTE ET LE POINT', 70, 1760, 28);
+  const fin = route(ctx, courbe([[70, 1860], [350, 1790], [640, 1850], [880, 1790]], 120), 1, { large: 30 }); pointBraise(ctx, 880, 1790, 0, 28);
+}
+window.pret = (async () => { await polices('../fonts'); window.setT = frame; frame(); return true; })();
+</script>

@@ -1,0 +1,24 @@
+1
+00:00:00,000 --> 00:00:03,000
+Un cas pratique. Yao est un personnage fictif.
+
+2
+00:00:03,000 --> 00:00:09,000
+Yao danse depuis 6 ans. Il loue une salle. Il achète une sono.
+
+3
+00:00:09,000 --> 00:00:13,000
+Il a dépensé avant de savoir si quelqu'un viendrait.
+
+4
+00:00:13,000 --> 00:00:20,000
+Tester d'abord : 4 séances dehors, 10 personnes. Il note ce qui plaît.
+
+5
+00:00:20,000 --> 00:00:24,000
+8 semaines de suite. Même jour, même heure.
+
+6
+00:00:26,900 --> 00:00:28,000
+Qu'aurais-tu fait ? Épisode 2 mardi.
+

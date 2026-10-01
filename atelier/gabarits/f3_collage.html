@@ -1,0 +1,120 @@
+<!doctype html><meta charset="utf-8">
+<!-- GABARIT F3 « LE COLLAGE QUI BOUGE » — Atlas de papier, LEGAC'I.
+     Le texte et les temps viennent de window.SCENE (fichier JSON dans atelier/scenes/).
+     Sans SCENE, le gabarit joue l'exemple « Le cas de Yao 1/4 ». -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="../atlas.js"></script>
+<script>
+const DEFAUT = {
+  id: "003", duree: 28,
+  etiquette: "LE CAS · 1/4", titre: ["LE CAS", "DE YAO"], tampon: "PERSONNAGE FICTIF",
+  ouverture: "Un cas pratique. Yao est un personnage fictif.",
+  temps: [
+    { nom: "SITUATION", debut: 3, fin: 9, sous: "Yao danse depuis 6 ans. Il loue une salle. Il achète une sono." },
+    { nom: "L'ERREUR", debut: 9, fin: 13, grand: ["SALLE", "VIDE."], sous: "Il a dépensé avant de savoir si quelqu'un viendrait." },
+    { nom: "À FAIRE", debut: 13, fin: 20, grand: ["4 SÉANCES", "10 PERSONNES"], sous: "Tester d'abord : 4 séances dehors, 10 personnes. Il note ce qui plaît." },
+    { nom: "NE PAS LÂCHER", debut: 20, fin: 24, compteur: 8, sous: "8 semaines de suite. Même jour, même heure." }
+  ],
+  fin: { debut: 24, appel: "Qu'aurais-tu fait ? Épisode 2 mardi." }
+};
+const S = window.SCENE || DEFAUT;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let FOND, CARTE;
+const T = n => S.temps.find(x => x.nom === n);
+
+function decorSalle(t, vide) {
+  // sol carrelé tramé + mur + porte
+  ctx.save(); ctx.fillStyle = '#e4dccb'; ctx.fillRect(90, 700, 900, 560);
+  const sol = trame(ctx, '#b9b9b9', '#5c5c5c', 10, 2.2); ctx.fillStyle = sol;
+  ctx.beginPath(); ctx.moveTo(90, 1120); ctx.lineTo(990, 1120); ctx.lineTo(1040, 1330); ctx.lineTo(40, 1330); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(20,20,20,.55)'; ctx.lineWidth = 3; for (let i = 0; i <= 8; i++) { const xa = 90 + i * 112.5, xb = 40 + i * 125; ctx.beginPath(); ctx.moveTo(xa, 1120); ctx.lineTo(xb, 1330); ctx.stroke(); } [1170, 1240].forEach(y => { ctx.beginPath(); ctx.moveTo(60, y); ctx.lineTo(1020, y); ctx.stroke(); });
+  papierDechire(ctx, 720, 820, 170, 300, { fond: trame(ctx, '#6d6d6d', '#1d1d1d', 9, 2.6), seed: 31, amp: 3 });
+  ctx.restore();
+}
+function sono(ctx, x, y, t, chute) {
+  const yy = y - (1 - ease(chute)) * 700 + (chute >= 1 ? 0 : 0);
+  ctx.save(); ctx.translate(x, yy); ctx.rotate((boilSeed(t) % 2 ? .01 : -.01));
+  papierDechire(ctx, -85, -260, 170, 260, { fond: '#1b1b1b', seed: 51, amp: 3 });
+  [[-150, 46], [-60, 30]].forEach(([cy, r]) => { ctx.fillStyle = trame(ctx, '#777', '#222', 7, 2); ctx.beginPath(); ctx.arc(0, cy, r, 0, 7); ctx.fill(); ctx.strokeStyle = '#c9c9c9'; ctx.lineWidth = 3; ctx.stroke(); });
+  ctx.restore();
+}
+function etiquetteKraft(ctx, txt, x, y, rot, seed) { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); papierDechire(ctx, 0, 0, 230, 78, { fond: '#cdb68f', seed, amp: 3 }); ctx.font = '400 40px SE'; ctx.fillStyle = C.encre; ctx.fillText(txt, 22, 52); ctx.beginPath(); ctx.arc(205, 39, 8, 0, 7); ctx.fillStyle = C.papier; ctx.fill(); ctx.restore(); }
+function arbre(t, p) { encreTrace(ctx, [[180, 1300], [185, 1150], [178, 1000], [190, 900]], p, { ep: 12, seed: 61 }); for (let k = 0; k < 4; k++) encreTrace(ctx, cercleEncre(190 + (k % 2 ? 60 : -50), 820 + (k > 1 ? -80 : 0), 110, 80, 1.2, 70 + k), p * 1.4 - k * .2, { ep: 6, seed: 80 + k }); }
+function soleil(t, p) { const pts = []; for (let a = 0; a < 6 * Math.PI; a += .12) pts.push([880 + Math.cos(a + t * .6) * a * 6, 600 + Math.sin(a + t * .6) * a * 6]); encreTrace(ctx, pts, p, { ep: 6, seed: 91 }); }
+function carnet(t, debut) {
+  ctx.save(); ctx.translate(640, 1000); ctx.rotate(.06); papierDechire(ctx, 0, 0, 330, 300, { fond: '#f3eee2', seed: 71 });
+  ctx.strokeStyle = 'rgba(70,110,140,.5)'; ctx.lineWidth = 2; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(20, 70 + i * 60); ctx.lineTo(310, 70 + i * 60); ctx.stroke(); }
+  ctx.font = '400 34px SE'; ctx.fillStyle = C.encre; ['séance 1', 'séance 2', 'séance 3', 'séance 4'].forEach((s, i) => { ctx.strokeRect(24, 32 + i * 60, 30, 30); ctx.fillText(s, 70, 58 + i * 60); const p = clamp((step12(t) - debut - i * .6) / .3); encreTrace(ctx, [[26, 48 + i * 60], [38, 62 + i * 60], [64, 26 + i * 60]], p, { ep: 6, seed: 120 + i }); });
+  ctx.restore();
+}
+function foule(t, debut) { const pos = [[260, 1250], [360, 1290], [470, 1240], [560, 1300], [300, 1350], [420, 1360], [700, 1330], [800, 1280], [890, 1340], [620, 1380]]; pos.forEach(([x, y], i) => { if (step12(t) < debut + i * .25) return; const b = rng(boilSeed(t) * 3 + i); ctx.save(); ctx.translate(x + (b() - .5) * 3, y + (b() - .5) * 3); ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 4; ctx.fillStyle = trame(ctx, '#8c8c8c', '#2a2a2a', 7, 2); ctx.beginPath(); ctx.arc(0, -120, 24, 0, 7); ctx.fill(); ctx.beginPath(); ctx.roundRect(-28, -94, 56, 94, 14); ctx.fill(); ctx.restore(); }); }
+function calendrier(t, debut, n) {
+  ctx.save(); ctx.translate(120, 820); papierDechire(ctx, -30, -40, 900, 470, { fond: '#f4efe4', seed: 141 });
+  for (let i = 0; i < n; i++) { const x = (i % 4) * 210, y = Math.floor(i / 4) * 200; encreTrace(ctx, [[x, y], [x + 170, y], [x + 170, y + 160], [x, y + 160], [x, y]], 1, { ep: 5, seed: 150 + i }); ctx.font = '400 30px SE'; ctx.fillStyle = C.encre; ctx.fillText('sem. ' + (i + 1), x + 14, y + 40); const p = clamp((step12(t) - debut - .3 - i * .38) / .25); encreTrace(ctx, [[x + 30, y + 60], [x + 140, y + 140]], p * 2, { ep: 9, seed: 160 + i }); encreTrace(ctx, [[x + 140, y + 60], [x + 30, y + 140]], p * 2 - 1, { ep: 9, seed: 170 + i }); }
+  ctx.restore(); const k = Math.min(n, Math.max(1, Math.floor((step12(t) - debut - .3) / .38) + 1));
+  ctx.save(); ctx.font = '900 200px BS'; ctx.fillStyle = C.bleu; const lab = k + ' / ' + n + ' SEM.'; const tw = ctx.measureText(lab).width; const sc = Math.min(1, 940 / tw); ctx.translate(70, 720); ctx.scale(sc, 1); ctx.fillText(lab, 0, 0); ctx.restore();
+}
+function carteFin(t, debut) {
+  const u = t - debut; ctx.drawImage(CARTE, 0, 0);
+  const lieux = [['Yopougon', 80, 840, -.08], ['Plateau', 420, 830, .05], ['Cocody', 800, 850, -.04], ['Treichville', 700, 1190, .03], ['la lagune', 110, 1160, -.1]];
+  lieux.forEach(([n, x, y, r], i) => { if (u > .2 + i * .15) annotation(ctx, n, x, y, 70, r); });
+  const pts = courbe([[540, 1960], [330, 1700], [690, 1480], [420, 1260], [640, 1080], [560, 940]], 200);
+  const fin = route(ctx, pts, clamp(step12(u) / 2.2));
+  if (u > 2.2) { pointBraise(ctx, 560, 940, t, 40); annotation(ctx, 'vous êtes ici', 620, 975, 72, -.05); }
+  if (u > 2.5) { bandeTitre(ctx, ["Le legs,", "c'est ici."], 70, 330, { taille: 104, seed: 25, poids: 800 }); }
+  if (u > 2.9) sousTitre(ctx, S.fin.appel, 77);
+  if (u > 2.5) { filetFamille(ctx, S.famille, 0, 0, W, 18, 4); legende(ctx, 'LE TRAIT · N° ' + S.id + ' · ABIDJAN', 600, 575, 25); }
+  dymo(ctx, S.etiquette, W / 2, 230, 40, 2); if (u > 2.5) logo(ctx, 600, 520, 52);
+}
+function frame(t) {
+  const gw = rng(boilSeed(t) + 500); ctx.save(); ctx.translate((gw() - .5) * 2, (gw() - .5) * 2);
+  if (S.fin && t >= S.fin.debut) { carteFin(t, S.fin.debut); }
+  else {
+    ctx.drawImage(FOND, 0, 0);
+    const sit = T('SITUATION'), err = T("L'ERREUR"), af = T('À FAIRE'), np = T('NE PAS LÂCHER');
+    if (t < sit.debut) { // OUVERTURE : la main pose Yao
+      bandeTitre(ctx, S.titre, 70, 380, { taille: 150, seed: 21 });
+      const pose = clamp(step12(t) / 1.1), sortie = clamp((step12(t) - 1.3) / .6);
+      personnage(ctx, 560, 1330 - (1 - ease(pose)) * 300, t, { bD: -.2, bG: .2 }, { echelle: .95 });
+      if (t < 2) main(ctx, 700 + (1 - ease(pose)) * 300 + ease(sortie) * 500, 640 - (1 - ease(pose)) * 200 + ease(sortie) * 600, -.5, 1.2);
+      if (t > 1.8) tampon(ctx, S.tampon, 110, 1200, -.12);
+      sousTitre(ctx, S.ouverture, 41);
+    } else if (t < err.debut) { // SITUATION
+      decorSalle(t); personnage(ctx, 420, 1300, t, { bD: -.9 + Math.sin(step12(t) * 4) * .4, bG: .9 - Math.sin(step12(t) * 4) * .4 }, { echelle: .82 });
+      sono(ctx, 820, 1310, t, clamp((step12(t) - sit.debut - 1.4) / .4));
+      if (t > sit.debut + 2.4) etiquetteKraft(ctx, 'loué', 160, 760, -.12, 81);
+      if (t > sit.debut + 3.0) etiquetteKraft(ctx, 'acheté', 640, 900, .1, 82);
+      if (t > sit.debut + 3.2) encreTrace(ctx, flecheEncre(560, 640, 780, 960), clamp((step12(t) - sit.debut - 3.2) / .6), { ep: 6, seed: 3 });
+      sousTitre(ctx, sit.sous, 42);
+    } else if (t < af.debut) { // ERREUR
+      decorSalle(t); personnage(ctx, 300, 1300, t, { bD: .15, bG: -.15, tete: .25 }, { echelle: .82 }); sono(ctx, 840, 1310, t, 1);
+      encreTrace(ctx, cercleEncre(600, 1240, 230, 80, 1.15, 12), clamp((step12(t) - err.debut - .4) / .8), { ep: 7, seed: 12 });
+      bandeTitre(ctx, err.grand, 90, 330, { taille: 170, seed: 23, fond: C.encre, encre: C.papier, rot: .02 });
+      sousTitre(ctx, err.sous, 43);
+    } else if (t < np.debut) { // À FAIRE
+      arbre(t, clamp((step12(t) - af.debut) / 1.2)); soleil(t, clamp((step12(t) - af.debut) / 1.5));
+      personnage(ctx, 470, 1300, t, { bD: -1.2 + Math.sin(step12(t) * 5) * .5, bG: 1.2 - Math.sin(step12(t) * 5) * .5, saut: (boilSeed(t) % 4 < 2 ? 18 : 0) }, { echelle: .7 });
+      foule(t, af.debut + .8); carnet(t, af.debut + 3.2);
+      bandeTitre(ctx, af.grand, 70, 330, { taille: 120, seed: 24 });
+      sousTitre(ctx, af.sous, 44);
+    } else { // NE PAS LÂCHER
+      calendrier(t, np.debut, np.compteur);
+      sousTitre(ctx, np.sous, 45);
+    }
+    const cur = S.temps.find(x => t >= x.debut && t < x.fin); dymo(ctx, cur ? cur.nom : S.etiquette, W / 2, 230, 40, cur ? 5 : 2);
+  }
+  ctx.restore();
+  if (err && t >= T("L'ERREUR").debut && t < T("L'ERREUR").debut + 2 / 24) { ctx.save(); ctx.globalCompositeOperation = 'difference'; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  vignette(ctx, .38); grain(ctx, t, .12);
+}
+var err = true;
+window.pret = (async () => {
+  await polices('../fonts');
+  FOND = papier({ grille: true, seed: 7 }); CARTE = papier({ grille: false, seed: 9, teinte: '#ECE3CF' });
+  const cx = CARTE.getContext('2d'); // lagune à l'encre
+  for (let k = 0; k < 3; k++) { const pts = []; for (let x = -20; x <= 1100; x += 20) pts.push([x, 1020 + k * 34 + Math.sin(x / 90 + k) * 26]); cx.globalAlpha = .7; encreTrace(cx, pts, 1, { ep: 4, seed: 300 + k }); cx.globalAlpha = 1; }
+  for (let i = 0; i < 9; i++) { const x = 90 + i * 110, h = 90 + (i * 37 % 110); cx.save(); cx.shadowColor = 'rgba(0,0,0,.2)'; cx.shadowBlur = 8; cx.shadowOffsetX = 4; cx.shadowOffsetY = 5; poly(cx, bordDechire(x, 770 - h, 80, h, 400 + i, 2.5, 7)); cx.fillStyle = trame(cx, i % 3 ? '#9a9a9a' : '#c4c4c4', '#2b2b2b', 8, 2); cx.fill(); cx.restore(); for (let w = 0; w < h / 26 - 1; w++) for (let z = 0; z < 3; z++) { cx.fillStyle = 'rgba(250,248,240,.8)'; cx.fillRect(x + 12 + z * 22, 770 - h + 16 + w * 26, 10, 12); } }
+  window.setT = frame; frame(0); return true;
+})();
+</script>

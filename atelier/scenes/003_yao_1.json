@@ -1,0 +1,52 @@
+{
+  "id": "003",
+  "duree": 28,
+  "format": "F3",
+  "etiquette": "LE CAS · 1/4",
+  "titre": [
+    "LE CAS",
+    "DE YAO"
+  ],
+  "tampon": "PERSONNAGE FICTIF",
+  "ouverture": "Un cas pratique. Yao est un personnage fictif.",
+  "temps": [
+    {
+      "nom": "SITUATION",
+      "debut": 3,
+      "fin": 9,
+      "sous": "Yao danse depuis 6 ans. Il loue une salle. Il achète une sono."
+    },
+    {
+      "nom": "L'ERREUR",
+      "debut": 9,
+      "fin": 13,
+      "grand": [
+        "SALLE",
+        "VIDE."
+      ],
+      "sous": "Il a dépensé avant de savoir si quelqu'un viendrait."
+    },
+    {
+      "nom": "À FAIRE",
+      "debut": 13,
+      "fin": 20,
+      "grand": [
+        "4 SÉANCES",
+        "10 PERSONNES"
+      ],
+      "sous": "Tester d'abord : 4 séances dehors, 10 personnes. Il note ce qui plaît."
+    },
+    {
+      "nom": "NE PAS LÂCHER",
+      "debut": 20,
+      "fin": 24,
+      "compteur": 8,
+      "sous": "8 semaines de suite. Même jour, même heure."
+    }
+  ],
+  "fin": {
+    "debut": 24,
+    "appel": "Qu'aurais-tu fait ? Épisode 2 mardi."
+  },
+  "famille": "INFORMER"
+}
